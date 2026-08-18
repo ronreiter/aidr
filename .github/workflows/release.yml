@@ -43,6 +43,7 @@ jobs:
           security import cert.p12 -k "$KEYCHAIN" -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k ci "$KEYCHAIN"
           codesign --deep --force --options runtime --timestamp \
+            --entitlements aidr.entitlements \
             --sign "$MACOS_SIGN_IDENTITY" dist/aidr.app
           codesign --verify --deep --strict dist/aidr.app
           rm -f cert.p12
