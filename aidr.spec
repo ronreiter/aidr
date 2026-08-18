@@ -38,7 +38,7 @@ app = BUNDLE(
         'LSUIElement': True,               # menu-bar only, no dock icon
         'CFBundleName': 'ai;dr',
         'CFBundleDisplayName': 'ai;dr',
-        'CFBundleShortVersionString': '0.1.0',
+        'CFBundleShortVersionString': '0.1.2',
         'NSHighResolutionCapable': True,
     },
 )

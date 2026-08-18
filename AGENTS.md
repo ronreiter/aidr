@@ -41,10 +41,11 @@ self-contained `.app` with PyInstaller. macOS only.
   NSPopover gets dismissed instantly because rumps assigns a menu to the
   status item. The panel never steals focus and dismisses on click (a
   gesture recognizer) or after 10s.
-- Menu-bar **icon** is the SF Symbol `sparkles.rectangle.stack` (fallbacks:
-  doc.text.magnifyingglass, wand.and.sparkles, sparkles), set as a template
-  image on the status button once it exists (in `_ensure_icon`, from the
-  first clip-timer tick). Placeholder title `✨` until then.
+- Menu-bar **icon** is the Tabler `bubble-text` glyph (filled variant) (MIT), embedded as an SVG
+  string (`ICON_SVG`) and loaded via `NSImage.initWithData_` — AppKit renders SVG
+  natively. Set as a template image on the status button in `_ensure_icon` (from
+  the first clip-timer tick); SF Symbols in `ICON_SYMBOLS` remain as a fallback.
+  The website uses the same glyph in both toolbars and the favicon.
 - Threading: worker thread does model load + inference and hands results to a
   `queue.Queue`; a main-thread drain timer updates the UI. Only the main
   thread touches AppKit.

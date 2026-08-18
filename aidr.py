@@ -17,6 +17,7 @@ import queue
 import re
 import sys
 import threading
+import webbrowser
 
 import objc
 import rumps
@@ -28,6 +29,7 @@ from AppKit import (
     NSFontAttributeName,
     NSForegroundColorAttributeName,
     NSImage,
+    NSImageView,
     NSMutableAttributedString,
     NSMutableParagraphStyle,
     NSPanel,
@@ -38,7 +40,7 @@ from AppKit import (
     NSTextField,
     NSVisualEffectView,
 )
-from Foundation import NSMakePoint, NSMakeRect, NSMakeSize, NSObject
+from Foundation import NSData, NSMakePoint, NSMakeRect, NSMakeSize, NSObject
 
 # AppKit enum values (stable) — declared as literals to avoid import churn.
 NS_BORDERLESS = 0
@@ -51,7 +53,20 @@ NS_VE_STATE_ACTIVE = 1
 NS_VE_BLEND_BEHIND = 0
 NS_WORD_WRAP = 0  # NSLineBreakByWordWrapping
 
-# Menu-bar icon: an SF Symbol (document + sparkles = "summarize"). Tried in order.
+# Menu-bar icon: Tabler "bubble-text" filled (MIT) — a speech bubble with text lines.
+ICON_SVG = (
+    b'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"'
+    b' fill="black" stroke="none">'
+    b'<path d="M12.4 2l.253 .005a6.34 6.34 0 0 1 5.235 3.166l.089 .163l.178 .039a6.33 6.33 0 0 1 4.254 3.406l.105 '
+    b'.228a6.334 6.334 0 0 1 -5.74 8.865l-.144 -.002l-.037 .052a5.26 5.26 0 0 1 -5.458 1.926l-.186 -.051l-3.435 '
+    b'2.06a1 1 0 0 1 -1.508 -.743l-.006 -.114v-2.435l-.055 -.026a3.67 3.67 0 0 1 -1.554 -1.498l-.102 -.199a3.67 3.67 '
+    b'0 0 1 -.312 -2.14l.038 -.21l-.116 -.092a5.8 5.8 0 0 1 -1.887 -6.025l.071 -.238a5.8 5.8 0 0 1 5.42 '
+    b'-4.004h.157l.15 -.165a6.33 6.33 0 0 1 4.33 -1.963zm1.6 11h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0 -2m3 -4h-10a1 1 0 1 0 '
+    b'0 2h10a1 1 0 0 0 0 -2"/>'
+    b'</svg>'
+)
+
+# Fallback SF Symbols, if the SVG ever fails to load.
 ICON_SYMBOLS = [
     "sparkles.rectangle.stack",  # a page/stack with sparkles
     "doc.text.magnifyingglass",
@@ -72,6 +87,10 @@ POLL_SECONDS = 0.4  # clipboard check interval
 POPUP_SECONDS = 10.0  # how long the card stays before auto-hiding
 CARD_WIDTH = 400
 PAD = 16
+BRAND_H = 14      # the ai;dr header row inside the card
+BRAND_GAP = 10
+
+WEBSITE = os.environ.get("AIDR_WEBSITE", "https://ronreiter.github.io/aidr/")
 
 HEADLINE_PROMPT = (
     "You are ai;dr (AI; didn't read). Distill the text into its single "
@@ -157,7 +176,17 @@ def _break_numbered_items(text):
 
 
 def make_menu_icon():
-    """A monochrome template image from the first SF Symbol that resolves."""
+    """The Tabler bubble-text glyph as a template image; SF Symbol as fallback."""
+    data = NSData.dataWithBytes_length_(ICON_SVG, len(ICON_SVG))
+    img = NSImage.alloc().initWithData_(data)
+    if img is not None and img.isValid():
+        size = img.size()
+        if size.height:
+            scale = ICON_HEIGHT / size.height
+            img.setSize_(NSMakeSize(size.width * scale, ICON_HEIGHT))
+        img.setTemplate_(True)
+        _dbg("icon: tabler bubble-text (filled)")
+        return img
     for name in ICON_SYMBOLS:
         img = NSImage.imageWithSystemSymbolName_accessibilityDescription_(name, "ai;dr")
         if img is not None:
@@ -166,7 +195,7 @@ def make_menu_icon():
                 scale = ICON_HEIGHT / size.height
                 img.setSize_(NSMakeSize(size.width * scale, ICON_HEIGHT))
             img.setTemplate_(True)
-            _dbg(f"icon symbol: {name}")
+            _dbg(f"icon symbol fallback: {name}")
             return img
     return None
 
@@ -196,7 +225,7 @@ class _CardController(NSObject):
 class AidrApp(rumps.App):
     def __init__(self):
         super().__init__("ai;dr", title="✨", quit_button="Quit ai;dr")
-        self.menu = ["Show clipboard summary", "Copy last summary"]
+        self.menu = ["About ai;dr…", None, "Show clipboard summary", "Copy last summary"]
         self.busy = False
         self.last_result = ""  # full headline + detail, for "Copy last summary" + dedup
         self.last_headline = ""  # kept separately so the card can be re-shown
@@ -207,6 +236,8 @@ class AidrApp(rumps.App):
         self._icon_set = False
         self._panel = None
         self._label = None
+        self._brand_icon = None
+        self._brand_text = None
         self._card = None
         self._last_change = NSPasteboard.generalPasteboard().changeCount()
 
@@ -245,6 +276,10 @@ class AidrApp(rumps.App):
             self._show_card(self.last_headline, self.last_detail)
         else:
             self._show_card("Nothing summarized yet.", None)
+
+    @rumps.clicked("About ai;dr…")
+    def _about(self, _sender):
+        webbrowser.open(WEBSITE)
 
     @rumps.clicked("Copy last summary")
     def _copy_last(self, _sender):
@@ -338,6 +373,27 @@ class AidrApp(rumps.App):
         label.cell().setLineBreakMode_(NS_WORD_WRAP)
         effect.addSubview_(label)
 
+        # brand row: the app glyph plus the ai;dr wordmark
+        brand_icon = NSImageView.alloc().initWithFrame_(NSMakeRect(PAD, PAD, BRAND_H, BRAND_H))
+        img = make_menu_icon()
+        if img is not None:
+            brand_icon.setImage_(img)
+            brand_icon.setContentTintColor_(NSColor.secondaryLabelColor())
+        effect.addSubview_(brand_icon)
+
+        brand_text = NSTextField.alloc().initWithFrame_(
+            NSMakeRect(PAD + BRAND_H + 6, PAD, 90, BRAND_H + 2)
+        )
+        brand_text.setBezeled_(False)
+        brand_text.setDrawsBackground_(False)
+        brand_text.setEditable_(False)
+        brand_text.setSelectable_(False)
+        brand_text.setStringValue_("ai;dr")
+        brand_text.setFont_(NSFont.boldSystemFontOfSize_(11))
+        brand_text.setTextColor_(NSColor.secondaryLabelColor())
+        effect.addSubview_(brand_text)
+        self._brand_icon, self._brand_text = brand_icon, brand_text
+
         panel.setContentView_(effect)
         self._card = _CardController.alloc().initWithPanel_(panel)
         gesture = NSClickGestureRecognizer.alloc().initWithTarget_action_(
@@ -383,15 +439,18 @@ class AidrApp(rumps.App):
         self._label.setAttributedStringValue_(self._card_text(headline, detail))
         fit = self._label.cell().cellSizeForBounds_(NSMakeRect(0, 0, inner, 10_000))
         h = max(22, min(int(fit.height) + 2, 460))
-        total = h + 2 * PAD
+        total = h + BRAND_GAP + BRAND_H + 2 * PAD
         self._label.setFrame_(NSMakeRect(PAD, PAD, inner, h))
+        brand_y = PAD + h + BRAND_GAP          # AppKit y grows upward, so this sits on top
+        self._brand_icon.setFrame_(NSMakeRect(PAD, brand_y, BRAND_H, BRAND_H))
+        self._brand_text.setFrame_(NSMakeRect(PAD + BRAND_H + 6, brand_y - 2, 90, BRAND_H + 2))
         self._panel.setContentSize_(NSMakeSize(CARD_WIDTH, total))
 
         x, y = self._anchor(total)
         self._panel.setFrameOrigin_(NSMakePoint(x, y))
         self._panel.orderFrontRegardless()
         self._card.arm_(POPUP_SECONDS)  # one-shot auto-close, resets on each show
-        _dbg(f"card visible={self._panel.isVisible()} at ({int(x)},{int(y)})")
+        _dbg(f"card visible={self._panel.isVisible()} frame={int(x)},{int(y)},{CARD_WIDTH},{int(total)}")
 
     def _anchor(self, total):
         """Top-right, just under the menu bar, aligned to the status item if we can find it."""
