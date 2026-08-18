@@ -205,11 +205,12 @@ class _CardController(NSObject):
     one-shot auto-close. Uses performSelector:afterDelay: — a real one-shot on
     the main run loop, unlike rumps.Timer which fires immediately on start."""
 
-    def initWithPanel_(self, panel):
+    def initWithPanel_app_(self, panel, app):
         self = objc.super(_CardController, self).init()
         if self is None:
             return None
         self._panel = panel
+        self._app = app
         return self
 
     def arm_(self, seconds):
@@ -220,6 +221,10 @@ class _CardController(NSObject):
         if self._panel is not None:
             self._panel.orderOut_(None)
         _dbg("card hidden")
+
+    def click_(self, _sender):
+        if self._app is not None:
+            self._app.card_clicked()
 
 
 class AidrApp(rumps.App):
@@ -368,7 +373,7 @@ class AidrApp(rumps.App):
         label.setBezeled_(False)
         label.setDrawsBackground_(False)
         label.setEditable_(False)
-        label.setSelectable_(True)
+        label.setSelectable_(False)
         label.cell().setWraps_(True)
         label.cell().setLineBreakMode_(NS_WORD_WRAP)
         effect.addSubview_(label)
@@ -395,11 +400,11 @@ class AidrApp(rumps.App):
         self._brand_icon, self._brand_text = brand_icon, brand_text
 
         panel.setContentView_(effect)
-        self._card = _CardController.alloc().initWithPanel_(panel)
-        gesture = NSClickGestureRecognizer.alloc().initWithTarget_action_(
-            self._card, "hide:"
-        )
-        effect.addGestureRecognizer_(gesture)
+        self._card = _CardController.alloc().initWithPanel_app_(panel, self)
+        for view in (effect, label, brand_text):
+            view.addGestureRecognizer_(
+                NSClickGestureRecognizer.alloc().initWithTarget_action_(self._card, "click:")
+            )
         self._panel, self._label = panel, label
 
     def _card_text(self, headline, detail):
@@ -433,6 +438,18 @@ class AidrApp(rumps.App):
                 )
         return s
 
+    def card_clicked(self):
+        """A click on the card copies the summary, confirms briefly, then hides it."""
+        if self.last_result:
+            pb = NSPasteboard.generalPasteboard()
+            pb.clearContents()
+            pb.setString_forType_(self.last_result, NSPasteboardTypeString)
+            self._last_change = pb.changeCount()   # don't summarize our own copy
+            if self._brand_text is not None:
+                self._brand_text.setStringValue_("copied")
+            _dbg("card clicked -> summary copied")
+        self._card.arm_(0.7)                       # let them see it, then dismiss
+
     def _show_card(self, headline, detail):
         self._ensure_card()
         inner = CARD_WIDTH - 2 * PAD
@@ -445,6 +462,9 @@ class AidrApp(rumps.App):
         self._brand_icon.setFrame_(NSMakeRect(PAD, brand_y, BRAND_H, BRAND_H))
         self._brand_text.setFrame_(NSMakeRect(PAD + BRAND_H + 6, brand_y - 2, 90, BRAND_H + 2))
         self._panel.setContentSize_(NSMakeSize(CARD_WIDTH, total))
+
+        if self._brand_text is not None:
+            self._brand_text.setStringValue_("ai;dr")
 
         x, y = self._anchor(total)
         self._panel.setFrameOrigin_(NSMakePoint(x, y))

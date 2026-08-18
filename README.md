@@ -15,7 +15,7 @@ sentences of detail if you want them.
 It takes a small AI to clean up after a big one. The small one runs entirely on
 your Mac.
 
-**[Download for macOS](https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip)**
+**[Download for macOS](https://github.com/ronreiter/aidr/releases/latest/download/aidr.dmg)**
 · [Website](https://ronreiter.github.io/aidr/)
 
 ---
@@ -49,8 +49,8 @@ app.
 
 ## Install
 
-Download **[aidr.zip](https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip)**,
-unzip it, and drag `aidr.app` into `/Applications`.
+Download **[aidr.dmg](https://github.com/ronreiter/aidr/releases/latest/download/aidr.dmg)**,
+open it, and drag ai;dr into the Applications folder shown beside it.
 
 Apple Silicon only. It's signed with a Developer ID and notarized by Apple, so
 it opens on first launch — no right-click dance, no "unidentified developer".
@@ -85,7 +85,7 @@ or point `AIDR_MODEL_PATH` at it.
 ## Building and releasing
 
 ```sh
-./build.sh        # → dist/aidr.app, model bundled
+./build.sh        # → dist/aidr.app and dist/aidr.dmg, model bundled
 ```
 
 Releases are automatic: bump `version` in `pyproject.toml` and push to `main`.

@@ -32,13 +32,13 @@ coll = COLLECT(exe, a.binaries, a.datas, name='aidr')
 app = BUNDLE(
     coll,
     name='aidr.app',
-    icon=None,
+    icon='aidr.icns',
     bundle_identifier='io.aidr.app',
     info_plist={
         'LSUIElement': True,               # menu-bar only, no dock icon
         'CFBundleName': 'ai;dr',
         'CFBundleDisplayName': 'ai;dr',
-        'CFBundleShortVersionString': '0.1.2',
+        'CFBundleShortVersionString': '0.1.3',
         'NSHighResolutionCapable': True,
     },
 )

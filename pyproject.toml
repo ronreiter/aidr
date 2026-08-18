@@ -1,6 +1,6 @@
 [project]
 name = "aidr"
-version = "0.1.2"
+version = "0.1.3"
 description = "Compresses long AI-generated text back into the one line it was hiding, using a small model that runs entirely on your Mac"
 authors = [
     {name = "Ron Reiter",email = "ron@sentra.io"}

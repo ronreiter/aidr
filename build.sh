@@ -9,3 +9,12 @@ if [ ! -f models/Qwen3-0.6B-Q8_0.gguf ]; then
 fi
 poetry run pyinstaller --noconfirm --clean aidr.spec
 echo "Built dist/aidr.app  ($(du -sh dist/aidr.app | cut -f1))"
+
+# Drag-to-install disk image: the app beside a link to /Applications.
+STAGE=$(mktemp -d)
+cp -R dist/aidr.app "$STAGE/aidr.app"
+ln -s /Applications "$STAGE/Applications"
+rm -f dist/aidr.dmg
+hdiutil create -volname "ai;dr" -srcfolder "$STAGE" -ov -format UDZO -quiet dist/aidr.dmg
+rm -rf "$STAGE"
+echo "Built dist/aidr.dmg  ($(du -sh dist/aidr.dmg | cut -f1))"

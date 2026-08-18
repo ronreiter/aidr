@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ai;dr — AI; didn't read</title>
 <meta name="description" content="AI wrote it, you shouldn't have to read it. ai;dr compresses long AI-generated text back into the one line it was hiding, using a small model that runs entirely on your Mac.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23ECEFF3%22><path d=%22M12.4 2l.253 .005a6.34 6.34 0 0 1 5.235 3.166l.089 .163l.178 .039a6.33 6.33 0 0 1 4.254 3.406l.105 .228a6.334 6.334 0 0 1 -5.74 8.865l-.144 -.002l-.037 .052a5.26 5.26 0 0 1 -5.458 1.926l-.186 -.051l-3.435 2.06a1 1 0 0 1 -1.508 -.743l-.006 -.114v-2.435l-.055 -.026a3.67 3.67 0 0 1 -1.554 -1.498l-.102 -.199a3.67 3.67 0 0 1 -.312 -2.14l.038 -.21l-.116 -.092a5.8 5.8 0 0 1 -1.887 -6.025l.071 -.238a5.8 5.8 0 0 1 5.42 -4.004h.157l.15 -.165a6.33 6.33 0 0 1 4.33 -1.963zm1.6 11h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0 -2m3 -4h-10a1 1 0 1 0 0 2h10a1 1 0 0 0 0 -2%22/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%225.4%22 fill=%22%232E62D9%22/><g transform=%22translate(5.04 5.04) scale(0.58)%22 fill=%22%23fff%22><path d=%22M12.4 2l.253 .005a6.34 6.34 0 0 1 5.235 3.166l.089 .163l.178 .039a6.33 6.33 0 0 1 4.254 3.406l.105 .228a6.334 6.334 0 0 1 -5.74 8.865l-.144 -.002l-.037 .052a5.26 5.26 0 0 1 -5.458 1.926l-.186 -.051l-3.435 2.06a1 1 0 0 1 -1.508 -.743l-.006 -.114v-2.435l-.055 -.026a3.67 3.67 0 0 1 -1.554 -1.498l-.102 -.199a3.67 3.67 0 0 1 -.312 -2.14l.038 -.21l-.116 -.092a5.8 5.8 0 0 1 -1.887 -6.025l.071 -.238a5.8 5.8 0 0 1 5.42 -4.004h.157l.15 -.165a6.33 6.33 0 0 1 4.33 -1.963zm1.6 11h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0 -2m3 -4h-10a1 1 0 1 0 0 2h10a1 1 0 0 0 0 -2%22/></g></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
@@ -52,6 +52,8 @@
 
   /* ---- hero ---- */
   .hero { padding: 72px 0 24px; }
+  .brandrow { display: flex; align-items: center; gap: clamp(14px, 2.4vw, 26px); }
+  .appmark { width: clamp(64px, 12vw, 128px); height: auto; flex: none; }
   .wordmark {
     font-family: var(--mono); font-weight: 600;
     font-size: clamp(64px, 12vw, 128px); letter-spacing: -0.04em;
@@ -230,10 +232,11 @@
 
 <div class="wrap">
   <section class="hero">
-    <h1 class="wordmark">ai<span class="semi">;</span>dr</h1>
+    <div class="brandrow"><svg class="appmark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.4" fill="#2E62D9"/><g transform="translate(5.04 5.04) scale(0.58)" fill="#fff"><path d="M12.4 2l.253 .005a6.34 6.34 0 0 1 5.235 3.166l.089 .163l.178 .039a6.33 6.33 0 0 1 4.254 3.406l.105 .228a6.334 6.334 0 0 1 -5.74 8.865l-.144 -.002l-.037 .052a5.26 5.26 0 0 1 -5.458 1.926l-.186 -.051l-3.435 2.06a1 1 0 0 1 -1.508 -.743l-.006 -.114v-2.435l-.055 -.026a3.67 3.67 0 0 1 -1.554 -1.498l-.102 -.199a3.67 3.67 0 0 1 -.312 -2.14l.038 -.21l-.116 -.092a5.8 5.8 0 0 1 -1.887 -6.025l.071 -.238a5.8 5.8 0 0 1 5.42 -4.004h.157l.15 -.165a6.33 6.33 0 0 1 4.33 -1.963zm1.6 11h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0 -2m3 -4h-10a1 1 0 1 0 0 2h10a1 1 0 0 0 0 -2"/></g></svg><h1 class="wordmark">ai<span class="semi">;</span>dr</h1></div>
     <p class="tagline">AI; didn't read.</p>
     <p class="lede">When someone else's AI pads one sentence into six paragraphs,
-    ai;dr hands the sentence back — read by a tiny model
+    ai;dr summarizes it for you, so you don't have to read the whole
+    thing — using a tiny model
     inside the app, on your Mac.</p>
   </section>
 
@@ -313,10 +316,10 @@
   </section>
 
   <section class="download" id="download">
-    <a class="dl" href="https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip"><svg class="ti" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+    <a class="dl" href="https://github.com/ronreiter/aidr/releases/latest/download/aidr.dmg"><svg class="ti" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
   <path d="M7 11l5 5l5 -5" />
   <path d="M12 4l0 12" /></svg>Download for macOS</a>
-    <p class="dlnote">Apple Silicon · ~680 MB, model included.</p>
+    <p class="dlnote">Apple Silicon · ~620 MB, model included · open the disk image and drag ai;dr to Applications.</p>
     <div class="src">
       <h4><svg class="ti" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l3 3l-3 3" />
   <path d="M13 15l3 0" />

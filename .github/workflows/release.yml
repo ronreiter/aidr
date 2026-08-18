@@ -111,6 +111,33 @@ jobs:
           spctl -a -vvv -t exec dist/aidr.app || true
           rm -f AuthKey.p8 notarize.zip
 
+      - name: Build the disk image
+        run: |
+          STAGE=$(mktemp -d)
+          cp -R dist/aidr.app "$STAGE/aidr.app"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "ai;dr" -srcfolder "$STAGE" -ov -format UDZO -quiet aidr.dmg
+          rm -rf "$STAGE"
+          if [ -n "$MACOS_SIGN_IDENTITY" ]; then
+            codesign --force --timestamp --sign "$MACOS_SIGN_IDENTITY" aidr.dmg
+          fi
+
+      # The app inside is already stapled; notarize the image too so the
+      # download itself validates offline.
+      - name: Notarize and staple the disk image
+        if: env.APPLE_API_KEY_P8 != ''
+        run: |
+          umask 077
+          printf '%s' "$APPLE_API_KEY_P8" > AuthKey.p8
+          xcrun notarytool submit aidr.dmg \
+            --key AuthKey.p8 \
+            --key-id "$APPLE_API_KEY_ID" \
+            --issuer "$APPLE_API_ISSUER" \
+            --wait --timeout 45m
+          xcrun stapler staple aidr.dmg
+          xcrun stapler validate aidr.dmg
+          rm -f AuthKey.p8
+
       - name: Zip the app
         run: ditto -c -k --sequesterRsrc --keepParent dist/aidr.app aidr.zip
 
@@ -121,6 +148,8 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: aidr.zip
+          files: |
+            aidr.dmg
+            aidr.zip
           tag_name: v${{ needs.check.outputs.version }}
           generate_release_notes: true
