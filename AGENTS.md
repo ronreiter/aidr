@@ -64,8 +64,13 @@ self-contained `.app` with PyInstaller. macOS only.
 - Verify the packaged app self-contained: run
   `AIDR_DEBUG=1 dist/aidr.app/Contents/MacOS/aidr`, copy 100+ chars, confirm
   the log shows it loaded the **bundled** model path and produced a result.
-- The app is ad-hoc signed only. Distribution to other Macs needs a Developer
-  ID sign + notarize, or the recipient right-click → Open.
+- Local `./build.sh` output is ad-hoc signed; release assets are signed with
+  "Developer ID Application: Ron Reiter (8BKF8DY7Y4)" + `aidr.entitlements`
+  (hardened runtime needs allow-unsigned-executable-memory for llama.cpp), not
+  notarized — recipients right-click → Open once. CI releases
+  (.github/workflows/release.yml, tag `v*`) are ad-hoc unless the MACOS_*
+  secrets are configured; the v0.1.0 asset was signed locally and uploaded
+  with `gh release upload --clobber`.
 - `.gitignore` excludes `models/`, `dist/`, `build/`, `.venv/`, and the local
   `.claude/settings*.json` (which set `worktree.bgIsolation=none` so background
   Claude jobs can edit this fresh repo in place).
