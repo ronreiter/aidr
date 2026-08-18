@@ -1,7 +1,7 @@
 [project]
 name = "aidr"
 version = "0.1.2"
-description = "AI; didn't read - distill any copied text to its point using a local model"
+description = "Compresses long AI-generated text back into the one line it was hiding, using a small model that runs entirely on your Mac"
 authors = [
     {name = "Ron Reiter",email = "ron@sentra.io"}
 ]

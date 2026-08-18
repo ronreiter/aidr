@@ -1,63 +1,107 @@
 # ai;dr
 
-**AI; didn't read.** A macOS menu-bar app: copy any text anywhere and a small
-card drops from the ai;dr icon with its point — a bold one-line headline plus a short detailed summary — distilled by a
-small language model that runs **entirely on your machine, in-process**. No
-server, no Ollama, no API keys, no network once the model is present. No
-window, no typing, no buttons; it just watches your clipboard.
+**AI wrote it. You shouldn't have to read it.**
 
-**Website:** https://ronreiter.github.io/aidr · **Download:** [latest release](https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip) (macOS, Apple Silicon)
+Something is generating an enormous amount of text lately, and it isn't people.
+The six-paragraph email that was one sentence. The pull request description that
+restates the diff back to you. Release notes written to sound thorough. A recipe
+with a childhood memoir attached. Somebody else's AI does the padding, and the
+padding lands on you.
 
-## Two ways to use it
+ai;dr is a macOS menu-bar app that reads it so you don't. Copy the wall of text
+and a card drops out of the menu bar with the one line it was hiding — plus two
+sentences of detail if you want them.
 
-### 1. The packaged app (for distribution — nothing to install)
+It takes a small AI to clean up after a big one. The small one runs entirely on
+your Mac.
 
-Build a self-contained `.app` that bundles Python, llama.cpp, and the model:
+**[Download for macOS](https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip)**
+· [Website](https://ronreiter.github.io/aidr/)
 
-```sh
-./build.sh          # → dist/aidr.app  (~680 MB, model included)
-```
-
-Then move `dist/aidr.app` to `/Applications` and double-click. It runs with
-**nothing else installed** — no Python, no Ollama, no downloads.
-
-**Gatekeeper:** release builds are signed with a Developer ID but not
-notarized, so on another Mac the first launch needs **right-click the app →
-Open → Open** (only once). Local `./build.sh` output is ad-hoc signed; to sign
-it yourself: `codesign --deep --force --options runtime -s "Developer ID
-Application: …" dist/aidr.app`.
-
-### 2. From source (for development)
-
-```sh
-poetry install
-poetry run python aidr.py        # or ./aidr
-```
-
-The model is downloaded once from Hugging Face (`Qwen/Qwen3-0.6B-GGUF`,
-~610 MB) and cached in `~/.cache/huggingface`.
+---
 
 ## How it works
 
-1. It lives in the menu bar (a document-with-sparkles icon).
-2. Copy 100+ characters in any app.
-3. A card drops from the icon: a bold **one-line headline** and, beneath it, a
-   **2-3 sentence detailed summary** — from a local **Qwen3-0.6B** model run via
-   `llama-cpp-python`. It stays 10 seconds or until you click it, and never
-   steals focus. Your clipboard is never modified.
+1. It sits in the menu bar. No window, no typing, no buttons.
+2. Copy 100+ characters, exactly the way you already copy things.
+3. A card drops from the icon with the point. It stays ten seconds, or until you
+   click it. It never steals focus from what you were doing.
 
-Click the icon for **Copy last summary** and **Quit**.
+Anything under 100 characters is ignored, so copying a file path, a variable
+name or a URL never sets it off. It wakes up for the things you'd otherwise
+skim. Your clipboard is never modified.
+
+The menu has **Show clipboard summary** if you missed a card, and **Copy last
+summary** to paste it somewhere.
+
+## Why it runs on your machine
+
+Paying a cloud AI to compress what another cloud AI inflated is a strange way to
+live. So the model ships inside the app:
+
+- **No server, no daemon, no API key.** `llama.cpp` runs Qwen3-0.6B in-process.
+- **Nothing is uploaded**, because there is nowhere for it to go — the app makes
+  no network requests at all. It works on a plane.
+- **Nothing is stored.** No history, no telemetry, no summaries on disk.
+
+That is also why the download is ~680 MB: almost all of it is the model, not the
+app.
+
+## Install
+
+Download **[aidr.zip](https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip)**,
+unzip it, and drag `aidr.app` into `/Applications`.
+
+Apple Silicon only. It's signed with a Developer ID and notarized by Apple, so
+it opens on first launch — no right-click dance, no "unidentified developer".
+
+To keep it running, add it under **System Settings → General → Login Items**.
+
+## Run from source
+
+```sh
+git clone https://github.com/ronreiter/aidr
+cd aidr
+poetry install
+./aidr
+```
+
+The model is fetched once from Hugging Face (~610 MB) and cached in
+`~/.cache/huggingface`. Needs Python 3.10–3.15.
 
 ## Configuration
 
-| Env var           | Default                    | Purpose                                |
-|-------------------|----------------------------|----------------------------------------|
-| `AIDR_MODEL_PATH` | (unset)                    | Use a specific local `.gguf` file      |
-| `AIDR_MODEL_REPO` | `Qwen/Qwen3-0.6B-GGUF`     | Hugging Face repo to download from      |
-| `AIDR_MODEL_FILE` | `Qwen3-0.6B-Q8_0.gguf`     | File within that repo                   |
-| `AIDR_DEBUG`      | (unset)                    | `1` → log the pipeline to stderr        |
+| Env var | Default | Purpose |
+|---|---|---|
+| `AIDR_MODEL_PATH` | (unset) | Use a specific local `.gguf` instead |
+| `AIDR_MODEL_REPO` | `Qwen/Qwen3-0.6B-GGUF` | Hugging Face repo to download from |
+| `AIDR_MODEL_FILE` | `Qwen3-0.6B-Q8_0.gguf` | File within that repo |
+| `AIDR_WEBSITE` | the project site | Where "About ai;dr…" points |
+| `AIDR_DEBUG` | (unset) | `1` logs the pipeline to stderr |
 
-To ship a different/smaller model, drop its `.gguf` in `models/` before
-`./build.sh`, or set the env vars above.
+Any GGUF llama.cpp can load will work — drop one in `models/` before building,
+or point `AIDR_MODEL_PATH` at it.
 
-macOS only (menu-bar UI + Metal-accelerated llama.cpp).
+## Building and releasing
+
+```sh
+./build.sh        # → dist/aidr.app, model bundled
+```
+
+Releases are automatic: bump `version` in `pyproject.toml` and push to `main`.
+CI builds the app, signs it with the Developer ID, notarizes it with Apple,
+staples the ticket, and publishes the zip. Pushes that don't change the version
+don't rebuild.
+
+## How it's put together
+
+A single Python file. `rumps` for the menu-bar item, AppKit for the floating
+card, `llama-cpp-python` for inference, and PyInstaller to fold Python, the
+native libraries and the model into one `.app`.
+
+## Credits
+
+Model: [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B) (Apache-2.0) ·
+Inference: [llama.cpp](https://github.com/ggerganov/llama.cpp) ·
+Icon: [Tabler Icons](https://tabler.io/icons) (MIT) ·
+ai;dr is MIT licensed.
