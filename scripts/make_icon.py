@@ -72,7 +72,7 @@ def render(px, glyph):
         NSMakeRect(inset, inset, px - 2 * inset, px - 2 * inset), radius, radius
     ).fill()
 
-    side = px * 0.52
+    side = px * 0.61   # ~0.74 of the tile, matching the website
     origin = (px - side) / 2
     glyph.drawInRect_fromRect_operation_fraction_(
         NSMakeRect(origin, origin, side, side), NSZeroRect, 2, 1.0
