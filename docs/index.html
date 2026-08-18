@@ -50,6 +50,23 @@
   .appicon { display: block; color: var(--text-hi); transform-origin: center;
     fill: currentColor; stroke: none; }
 
+  /* ---- star button, pinned to the top right ---- */
+  .starbtn {
+    position: fixed; top: 44px; right: 24px; z-index: 20;
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--system); font-size: 12.5px; font-weight: 600;
+    color: var(--text-hi); text-decoration: none;
+    background: rgba(28, 34, 43, 0.92);
+    border: 1px solid rgba(255,255,255,0.14); border-radius: 8px;
+    padding: 7px 12px;
+    backdrop-filter: blur(20px);
+  }
+  .starbtn:hover { background: rgba(255,255,255,0.15); }
+  @media (max-width: 560px) {
+    .starbtn { top: 40px; right: 14px; padding: 7px 9px; }
+    .starbtn .starlabel { display: none; }
+  }
+
   /* ---- hero ---- */
   .hero { padding: 72px 0 24px; }
   .brandrow { display: flex; align-items: center; gap: clamp(14px, 2.4vw, 26px); }
@@ -229,6 +246,10 @@
   <div class="left"><svg class="applelogo" viewBox="0 0 814 1000" width="11" height="13" aria-hidden="true"><path fill="currentColor" d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-20.1 65.5-64.5 120.7-107.4 175.6-31.9 40.2-72.3 80.4-118.1 80.4-38.6 0-52.7-24.6-97.2-24.6-48.6 0-63.9 24.6-97.4 24.6-45.8 0-79.3-38.9-111.2-79.1C114.9 795.4 0 645.8 0 496.5 0 315.7 118.1 224 234.5 224c38.6 0 71.9 25.9 97.2 25.9 24.6 0 63.9-27.2 106.8-27.2 16.3 0 74.8 1.3 137.3 60.9M416 137.4c22.9-27.2 39.1-64.5 39.1-101.9 0-5.2-.4-10.4-1.3-14.7-37.6 1.3-82.3 24.6-109.2 55.7-20.9 23.7-40.2 61-40.2 98.9 0 4.7.8 9.4 1.2 10.9 2.4.5 6.2.9 10 .9 33.6 0 75.9-22.2 100.4-49.8"/></svg><span>Finder</span><span>File</span><span>Edit</span><span>View</span></div>
   <div class="right"><svg class="appicon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12.4 2l.253 .005a6.34 6.34 0 0 1 5.235 3.166l.089 .163l.178 .039a6.33 6.33 0 0 1 4.254 3.406l.105 .228a6.334 6.334 0 0 1 -5.74 8.865l-.144 -.002l-.037 .052a5.26 5.26 0 0 1 -5.458 1.926l-.186 -.051l-3.435 2.06a1 1 0 0 1 -1.508 -.743l-.006 -.114v-2.435l-.055 -.026a3.67 3.67 0 0 1 -1.554 -1.498l-.102 -.199a3.67 3.67 0 0 1 -.312 -2.14l.038 -.21l-.116 -.092a5.8 5.8 0 0 1 -1.887 -6.025l.071 -.238a5.8 5.8 0 0 1 5.42 -4.004h.157l.15 -.165a6.33 6.33 0 0 1 4.33 -1.963zm1.6 11h-5a1 1 0 0 0 0 2h5a1 1 0 0 0 0 -2m3 -4h-10a1 1 0 1 0 0 2h10a1 1 0 0 0 0 -2"/></svg><span class="clock">Mon 9:41</span></div>
 </div>
+
+<a class="starbtn" href="https://github.com/ronreiter/aidr" target="_blank" rel="noopener">
+  <svg class="ti" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" /></svg><span class="starlabel">Star on GitHub</span>
+</a>
 
 <div class="wrap">
   <section class="hero">
