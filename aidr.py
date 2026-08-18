@@ -17,6 +17,7 @@ import queue
 import re
 import sys
 import threading
+import webbrowser
 
 import objc
 import rumps
@@ -72,6 +73,8 @@ POLL_SECONDS = 0.4  # clipboard check interval
 POPUP_SECONDS = 10.0  # how long the card stays before auto-hiding
 CARD_WIDTH = 400
 PAD = 16
+
+WEBSITE = os.environ.get("AIDR_WEBSITE", "https://ronreiter.github.io/aidr/")
 
 HEADLINE_PROMPT = (
     "You are ai;dr (AI; didn't read). Distill the text into its single "
@@ -196,7 +199,7 @@ class _CardController(NSObject):
 class AidrApp(rumps.App):
     def __init__(self):
         super().__init__("ai;dr", title="✨", quit_button="Quit ai;dr")
-        self.menu = ["Show clipboard summary", "Copy last summary"]
+        self.menu = ["About ai;dr…", None, "Show clipboard summary", "Copy last summary"]
         self.busy = False
         self.last_result = ""  # full headline + detail, for "Copy last summary" + dedup
         self.last_headline = ""  # kept separately so the card can be re-shown
@@ -245,6 +248,10 @@ class AidrApp(rumps.App):
             self._show_card(self.last_headline, self.last_detail)
         else:
             self._show_card("Nothing summarized yet.", None)
+
+    @rumps.clicked("About ai;dr…")
+    def _about(self, _sender):
+        webbrowser.open(WEBSITE)
 
     @rumps.clicked("Copy last summary")
     def _copy_last(self, _sender):
