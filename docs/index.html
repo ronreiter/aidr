@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ai;dr — AI; didn't read</title>
+<meta name="description" content="A macOS menu-bar app that turns whatever you copy into one line you'll actually read. A tiny language model, entirely on your Mac.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --desktop: #0F1115;
+    --card: #1C222B;
+    --text-hi: #ECEFF3;
+    --text-dim: #99A1AC;
+    --select: #2E62D9;
+    --sparkle: #F2C14E;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif: "Newsreader", Georgia, serif;
+    --system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--desktop);
+    color: var(--text-hi);
+    font-family: var(--system);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--select); color: #fff; }
+  a { color: inherit; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- faux macOS menu bar ---- */
+  .menubar {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 34px; padding: 0 16px;
+    background: rgba(28, 34, 43, 0.85);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-family: var(--system); font-size: 13px; color: var(--text-dim);
+    backdrop-filter: blur(20px);
+  }
+  .menubar .left { display: flex; gap: 18px; }
+  .menubar .apple { color: var(--text-hi); }
+  .menubar .right { display: flex; gap: 14px; align-items: center; }
+  .menubar .sparkle { color: var(--sparkle); }
+
+  /* ---- hero ---- */
+  .hero { padding: 72px 0 24px; }
+  .wordmark {
+    font-family: var(--mono); font-weight: 600;
+    font-size: clamp(64px, 12vw, 128px); letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .wordmark .semi { color: var(--select); }
+  .tagline {
+    font-family: var(--mono); font-weight: 500; font-size: 16px;
+    color: var(--text-dim); margin-top: 10px;
+  }
+  .lede {
+    max-width: 34em; margin-top: 24px; font-size: 17px; color: var(--text-hi);
+  }
+  .lede em { color: var(--text-dim); font-style: normal; }
+
+  /* ---- the demo: wall of text -> card ---- */
+  .demo { display: grid; grid-template-columns: 1fr 420px; gap: 40px; align-items: start; padding: 56px 0 8px; }
+  @media (max-width: 860px) { .demo { grid-template-columns: 1fr; } }
+  .wall {
+    font-family: var(--serif); font-size: 15.5px; line-height: 1.75;
+    color: var(--text-dim); position: relative;
+  }
+  .wall h3 {
+    font-family: var(--system); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .wall p + p { margin-top: 12px; }
+  .wall .sweep { border-radius: 2px; transition: background-color .12s, color .12s; }
+  .wall.swept .sweep { background: var(--select); color: #fff; }
+  .copybtn {
+    margin-top: 20px; font-family: var(--system); font-size: 13px; font-weight: 600;
+    color: var(--text-hi); background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14); border-radius: 7px;
+    padding: 7px 14px; cursor: pointer;
+  }
+  .copybtn:hover { background: rgba(255,255,255,0.13); }
+  .copybtn:focus-visible, a:focus-visible, .dl:focus-visible { outline: 2px solid var(--select); outline-offset: 3px; }
+
+  .cardcol { position: relative; min-height: 240px; }
+  .popcard {
+    background: rgba(28, 34, 43, 0.92);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px; padding: 16px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+    opacity: 0; transform: translateY(-14px);
+  }
+  .popcard.show { opacity: 1; transform: translateY(0); transition: opacity .28s ease, transform .32s cubic-bezier(.3,1.4,.5,1); }
+  .popcard .headline { font-size: 15px; font-weight: 700; }
+  .popcard .detail { margin-top: 10px; font-size: 12px; color: var(--text-dim); }
+  .popcard .detail li { list-style: none; padding-left: 18px; text-indent: -18px; }
+  .popcard .detail li + li { margin-top: 4px; }
+  .cardhint { margin-top: 10px; font-size: 11px; color: var(--text-dim); text-align: right; }
+
+  /* ---- facts ---- */
+  .facts { padding: 64px 0 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
+  @media (max-width: 860px) { .facts { grid-template-columns: 1fr; } }
+  .fact b { display: block; font-size: 14px; margin-bottom: 6px; }
+  .fact p { font-size: 13.5px; color: var(--text-dim); }
+
+  /* ---- download ---- */
+  .download { padding: 72px 0; text-align: left; border-top: 1px solid rgba(255,255,255,0.07); margin-top: 64px; }
+  .dl {
+    display: inline-block; font-family: var(--system); font-weight: 700; font-size: 16px;
+    color: #fff; background: var(--select); border-radius: 10px;
+    padding: 13px 26px; text-decoration: none;
+  }
+  .dl:hover { filter: brightness(1.12); }
+  .dlnote { margin-top: 12px; font-size: 12.5px; color: var(--text-dim); max-width: 40em; }
+  .src { margin-top: 28px; }
+  .src h4 { font-size: 13px; color: var(--text-dim); font-weight: 600; margin-bottom: 8px; }
+  pre {
+    font-family: var(--mono); font-size: 13px; line-height: 1.7;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px; padding: 14px 18px; overflow-x: auto; color: var(--text-hi);
+  }
+  footer {
+    padding: 28px 0 48px; font-size: 12.5px; color: var(--text-dim);
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  footer a { color: var(--text-dim); }
+  @media (prefers-reduced-motion: reduce) {
+    .popcard, .popcard.show { transition: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="menubar" aria-hidden="true">
+  <div class="left"><span class="apple"></span><span>Finder</span><span>File</span><span>Edit</span><span>View</span></div>
+  <div class="right"><span class="sparkle">✨</span><span id="clock">Mon 9:41</span></div>
+</div>
+
+<div class="wrap">
+  <section class="hero">
+    <h1 class="wordmark">ai<span class="semi">;</span>dr</h1>
+    <p class="tagline">AI; didn't read.</p>
+    <p class="lede">A macOS menu-bar app that turns whatever you copy into one line
+    you'll actually read — plus two sentences of detail if you want them.
+    A tiny language model does the reading <em>inside the app, on your Mac.</em></p>
+  </section>
+
+  <section class="demo">
+    <div class="wall" id="wall">
+      <h3>What you copied</h3>
+      <p><span class="sweep">ai;dr lives in the menu bar and watches the clipboard. When you copy
+      a hundred characters or more — an email thread, a changelog, a terms-of-service
+      page, a document like this one — it hands the text to a small language model
+      (Qwen3-0.6B) running in-process through llama.cpp. There is no server, no
+      Ollama, no API key, and no network call: the model ships inside the app
+      bundle, and inference happens on your machine's own silicon.</span></p>
+      <p><span class="sweep">A floating card then drops from the menu-bar icon with a bold one-line
+      headline and a short factual summary, stays for ten seconds or until you
+      click it, and never steals focus from what you were doing. If you miss it,
+      the menu has "Show clipboard summary" to bring the last one back, and
+      "Copy last summary" to paste it somewhere.</span></p>
+      <button class="copybtn" id="play">Copy this</button>
+    </div>
+    <div class="cardcol">
+      <div class="popcard" id="card" role="status">
+        <div class="headline">A local model summarizes anything you copy.</div>
+        <div class="detail">
+          <ul>
+            <li>1. Copy 100+ characters anywhere; a card drops from the menu bar.</li>
+            <li>2. Inference runs in-process with llama.cpp — nothing leaves the Mac.</li>
+            <li>3. The card shows a headline plus detail, for ten seconds, no focus stolen.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="cardhint">the actual card, recreated in HTML</p>
+    </div>
+  </section>
+
+  <section class="facts">
+    <div class="fact"><b>In-process</b>
+      <p>llama.cpp runs Qwen3-0.6B inside the app binary. No server to start, no daemon to babysit, no API key to paste.</p></div>
+    <div class="fact"><b>Private by construction</b>
+      <p>Your clipboard never leaves the machine — there is nothing it could be sent to. Works offline.</p></div>
+    <div class="fact"><b>Zero ritual</b>
+      <p>No window, no typing, no buttons. Copy text like you already do; read one line instead of four paragraphs.</p></div>
+  </section>
+
+  <section class="download" id="download">
+    <a class="dl" href="https://github.com/ronreiter/aidr/releases/latest/download/aidr.zip">Download for macOS</a>
+    <p class="dlnote">Apple Silicon · ~680 MB, model included · signed with a Developer ID but not
+    notarized, so on first launch: <b>right-click aidr.app → Open → Open</b>, once.</p>
+    <div class="src">
+      <h4>Or run from source</h4>
+      <pre>git clone https://github.com/ronreiter/aidr
+cd aidr
+poetry install
+./aidr</pre>
+    </div>
+  </section>
+
+  <footer>
+    <span>MIT license</span>
+    <a href="https://github.com/ronreiter/aidr">GitHub</a>
+    <span>Model: Qwen3-0.6B (Apache-2.0) via llama.cpp</span>
+    <span>© 2026 Ron Reiter</span>
+  </footer>
+</div>
+
+<script>
+  var wall = document.getElementById("wall");
+  var card = document.getElementById("card");
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function play() {
+    if (reduced) { wall.classList.add("swept"); card.classList.add("show"); return; }
+    wall.classList.remove("swept"); card.classList.remove("show");
+    setTimeout(function () { wall.classList.add("swept"); }, 250);
+    setTimeout(function () { card.classList.add("show"); }, 950);
+    setTimeout(function () { wall.classList.remove("swept"); }, 2400);
+  }
+  document.getElementById("play").addEventListener("click", function () {
+    var text = wall.innerText;
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).catch(function () {}); }
+    play();
+  });
+  window.addEventListener("load", function () { setTimeout(play, 500); });
+  var d = new Date();
+  document.getElementById("clock").textContent =
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()] + " " +
+    ((d.getHours() % 12) || 12) + ":" + String(d.getMinutes()).padStart(2, "0");
+</script>
+</body>
+</html>

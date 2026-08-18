@@ -1,0 +1,3 @@
+#!/bin/sh
+# ai;dr launcher — runs the tool with the project venv's python.
+exec "$(dirname "$0")/.venv/bin/python" "$(dirname "$0")/aidr.py" "$@"

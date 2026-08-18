@@ -1,0 +1,28 @@
+[project]
+name = "aidr"
+version = "0.1.0"
+description = "AI; didn't read - distill any copied text to its point using a local model"
+authors = [
+    {name = "Ron Reiter",email = "ron@sentra.io"}
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.16"
+dependencies = [
+    "rumps (>=0.4.0,<0.5.0)",
+    "llama-cpp-python (>=0.3.35,<0.4.0)",
+    "huggingface-hub (>=1.28.0,<2.0.0)"
+]
+
+
+[tool.poetry]
+# ai;dr is an application (a menu-bar script), not a library — don't build it as a package.
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pyinstaller (>=6.22.2,<7.0.0)"
+]

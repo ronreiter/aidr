@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.claude/settings.local.json
+.claude/settings.json
+models/
+dist/
+build/
+*.spec.bak
+.claude/worktrees/
